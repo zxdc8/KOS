@@ -99,3 +99,65 @@ function finsOff{
     FINRR_CTL:SETFIELD("DEPLOY",0).
     FINLR_CTL:SETFIELD("DEPLOY",0).
 }
+
+function gridOn{
+    local GF1control is GF1:getmodule("SyncModuleControlSurface").
+    local GF2control is GF2:getmodule("SyncModuleControlSurface").
+    local GF3control is GF3:getmodule("SyncModuleControlSurface").
+    local GF4control is GF4:getmodule("SyncModuleControlSurface").
+
+    GF1control:setfield("pitch", 0).
+    GF1control:setfield("roll", 0).
+    GF1control:setfield("yaw", 0).
+
+    GF2control:setfield("pitch", 0).
+    GF2control:setfield("roll", 0).
+    GF2control:setfield("yaw", 0).
+
+    GF3control:setfield("pitch", 0).
+    GF3control:setfield("roll", 0).
+    GF3control:setfield("yaw", 0).
+
+    GF4control:setfield("pitch", 0).
+    GF4control:setfield("roll", 0).
+    GF4control:setfield("yaw", 0).
+
+}
+
+function gridOff{
+    local GF1control is GF1:getmodule("SyncModuleControlSurface").
+    local GF2control is GF2:getmodule("SyncModuleControlSurface").
+    local GF3control is GF3:getmodule("SyncModuleControlSurface").
+    local GF4control is GF4:getmodule("SyncModuleControlSurface").
+
+    GF1control:setfield("pitch", 1).
+    GF1control:setfield("roll", 1).
+    GF1control:setfield("yaw", 1).
+
+    GF2control:setfield("pitch", 1).
+    GF2control:setfield("roll", 1).
+    GF2control:setfield("yaw", 1).
+
+    GF3control:setfield("pitch", 1).
+    GF3control:setfield("roll", 1).
+    GF3control:setfield("yaw", 1).
+
+    GF4control:setfield("pitch", 1).
+    GF4control:setfield("roll", 1).
+    GF4control:setfield("yaw", 1).
+    
+}
+
+function clusterDown{
+    local clusterControl is cluster:getmodulebyindex(1).
+    print cluster:getmodulebyindex(1).
+
+    clusterControl:doevent("next engine mode").
+}
+
+function clusterUp{
+    local clusterControl is cluster:getmodulebyindex(1).
+    print cluster:getmodulebyindex(1).
+
+    clusterControl:doevent("previous engine mode").
+}

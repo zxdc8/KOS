@@ -545,3 +545,126 @@ function targetLanding{
 
 
 }
+
+function primaryBoosterAscent{
+        local parameter selHeading, selPitch.
+    LOCK THROTTLE TO 1.0.
+
+    PRINT "Counting down:".
+    FROM {local countdown is 3.} UNTIL countdown = 0 STEP {SET countdown to countdown - 1.} DO {
+        PRINT "..." + countdown.
+        WAIT 1. // pauses the script here for 1 second.
+    }
+
+
+    stage.
+
+    wait 3.
+
+    stage.
+
+    //Ascent Phase
+    PRINT "ASCENT PHASE...".
+
+    SAS ON.
+
+    UNTIL ALTITUDE > 100 {
+        wait 0.1.
+        }
+        
+    PRINT "ROLL PROGRAM...".
+    SAS OFF.
+    UNTIL ship:velocity:surface:mag >=100{
+        LOCK STEERING TO HEADING(selHeading,89.99,180).
+        LOCK STEERING TO LOOKDIRUP( HEADING(selHeading,89.99,180):vector, -up:vector).
+    }
+
+    PRINT "PITCHING...".
+    LOCK STEERING TO HEADING(selHeading,selPitch, 180).
+
+    wait 10.
+    
+    lock steering to srfPrograde.
+
+    until apoapsis > 100000{
+        wait 0.1.
+    }
+
+    print "STAGE SEPARATION".
+    //lock throttle to 0.75.
+
+    //shutdown booster raptors.
+
+    clusterDown().
+    wait 1.
+    clusterDown().
+
+    activateSLRaptor().
+    activateVacRaptor().
+
+    wait 0.5.
+
+    stage.
+
+
+
+
+}
+
+function shBoostBack{
+    local parameter landingTgt.
+    set hdg to compass_for().
+    addons:tr:setTarget(landingTgt).
+    //wait 2.
+    //turnover.
+    
+    rcs on.
+    set thrott to 0.2.
+    lock throttle to thrott.
+
+    set steer to heading(hdg, 45, 180).
+    wait 3.
+    set steer to heading(hdg, 85, 180).
+    wait 3.
+    set steer to heading(hdg+180, 45, 000).
+    wait 3.
+    set steer to heading(hdg+180, 10, 000).
+
+    lock latError to addons:tr:impactPos:lat - addons:tr:getTarget:lat.
+    lock lngError to addons:tr:impactPos:lng - addons:tr:getTarget:lng.
+    lock bodyError to rotate_2D_vec(latError,lngError, -addons:tr:getTarget:heading).
+
+    lock tgtError to v(latError, lngError, 0):mag.
+
+    set pidAlong to pidLoop(4,0,0).
+    set pidAcross to pidloop(120,0,0).
+
+    set pidAlong:minoutput to 0.1.
+
+    lock steerCorrection to pidAcross:update(time:seconds, bodyError[1]).
+
+    lock steer to heading(addons:tr:getTarget:heading + steerCorrection ,5, 0).
+    lock steering to steer.
+
+    lock thrott to pidAlong:update(time:seconds, bodyError[0]).
+
+    print addons:tr:impactPos:heading + steerCorrection.
+
+    clusterUp().
+
+    until tgtError < 0.05{
+        print bodyError[1].
+        print landingTgt:heading - steerCorrection.
+    }
+
+    wait until tgtError < 0.05.
+        unlock throttle.
+        set throttle to 0.
+        lock steer to srfRetrograde.
+    
+
+
+
+
+
+}
