@@ -559,7 +559,7 @@ function primaryBoosterAscent{
 
     stage.
 
-    wait 3.
+    wait 2.
 
     stage.
 
@@ -614,8 +614,8 @@ function primaryBoosterAscent{
 function shBoostBack{
     local parameter landingTgt.
     set hdg to compass_for().
-    addons:tr:setTarget(landingTgt).
-    //wait 2.
+    
+    wait 2.
     //turnover.
     
     rcs on.
@@ -630,16 +630,21 @@ function shBoostBack{
     wait 3.
     set steer to heading(hdg+180, 10, 000).
 
+    addons:tr:setTarget(landingTgt).
     lock latError to addons:tr:impactPos:lat - addons:tr:getTarget:lat.
     lock lngError to addons:tr:impactPos:lng - addons:tr:getTarget:lng.
     lock bodyError to rotate_2D_vec(latError,lngError, -addons:tr:getTarget:heading).
 
     lock tgtError to v(latError, lngError, 0):mag.
 
-    set pidAlong to pidLoop(4,0,0).
-    set pidAcross to pidloop(120,0,0).
+    set pidAlong to pidLoop(10,0,0).
+    set pidAcross to pidloop(120,10,10).
 
-    set pidAlong:minoutput to 0.1.
+    set pidAlong:minoutput to 0.1. 
+    set pidAlong:maxoutput to 1.
+    set pidAcross:minoutput to -10. 
+    set pidAcross:maxoutput to 10.
+    set pidAlong:setpoint to 1/60.
 
     lock steerCorrection to pidAcross:update(time:seconds, bodyError[1]).
 
@@ -652,19 +657,96 @@ function shBoostBack{
 
     clusterUp().
 
-    until tgtError < 0.05{
+    until tgtError < 0.01{
         print bodyError[1].
         print landingTgt:heading - steerCorrection.
     }
 
-    wait until tgtError < 0.05.
-        unlock throttle.
-        set throttle to 0.
+    wait until tgtError < 0.01.
+        set thrott to 0.
+        cluster:shutdown.
+        
         lock steer to srfRetrograde.
+
+}
+
+function shGlide{
+    local parameter landingTgt.
+
+    gridOn.
+
+    lock steer to srfRetrograde.
+
+    unlock thrott.
+    set throttLdg to 0.
+    lock throttle to throttLdg.
+    cluster:activate.
+    clusterDown().
+    wait 1.
+
+    //wait 20.
+
+    addons:tr:setTarget(landingTgt).
+    lock latError to addons:tr:impactPos:lat - addons:tr:getTarget:lat.
+    lock lngError to addons:tr:impactPos:lng - addons:tr:getTarget:lng.
+    lock bodyError to rotate_2D_vec(latError,lngError, -addons:tr:getTarget:heading).
+
+    lock tgtError to v(latError, lngError, 0):mag.
+
+    set pidAlong to pidLoop(30,0,0).
+    set pidAcross to pidloop(30,0,0).
+
     
 
+    //lock steer to srfRetrograde:vector.
+    
+    lock tgtDirection to lookDirUp(landingTgt:position, up:vector).
 
+    lock crossVector to tgtDirection:starvector.
+    lock alongVector to tgtDirection:upvector.
 
+    lock steerCrossCorrection to pidAcross:update(time:seconds, -bodyError[1]).
+    lock steerAlongCorrection to pidAlong:update(time:seconds, -bodyError[0]).
 
+    lock steerDirection to srfRetrograde:vector + crossVector * steerCrossCorrection + alongVector * steerAlongCorrection.
+
+    lock steering to steerDirection.
+
+        lock iArrow TO VECDRAW(
+            V(0,0,0),
+            100*steerDirection,
+            RGB(1,0,0),
+            "steeringvector?",
+            1.0,
+            TRUE,
+            0.2,
+            TRUE,
+            TRUE
+
+            
+        ).
+    
+    
+    lock accel to ship:availableThrust/ship:mass - 9.81.
+    print accel.
+
+    print ship:availableThrust.
+    print ship:mass.
+    lock suicideAlt to verticalSpeed^2/(2*accel). 
+    print suicideAlt.
+
+    wait until altitude < suicideAlt+1000.
+    set pidThrott to pidLoop(0.4,0,0.05).
+    set pidThrott:minoutput to 0.1.
+    lock steering to srfRetrograde:vector.
+    until altitude < 100{
+        
+        set pidThrott:setpoint to -(2*accel*(altitude-500)) ^ 0.5.
+        print pidThrott:setpoint.
+        print verticalSpeed.
+        set throttLdg to pidThrott:update(time:seconds, verticalSpeed).
+        print throttLdg.
+        wait 0.001.
+    }
 
 }

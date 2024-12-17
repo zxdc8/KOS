@@ -38,7 +38,9 @@ function primaryAscent{
     primaryBoosterAscent(090, 82.5).
 }
 
-function shLanding{
-    set programTgt to latlng(28.5490773930942,-80.6559373483508).
+function shRecover{
+    set programTgt to latlng(28.5490773930942,-80.6559373483508). //ship:geoposition.
     shBoostback(programTgt).
+    shGlide(programTgt).
+    //shLanding(programTgt).
 }
