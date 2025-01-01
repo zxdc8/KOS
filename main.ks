@@ -28,6 +28,7 @@ set GF2 to ship:partsdubbed("gf2")[0].
 set GF3 to ship:partsdubbed("gf3")[0].
 set GF4 to ship:partsdubbed("gf4")[0].
 set cluster to ship:partsdubbed("cluster")[0].
+set olm to ship:partsnamed(SLE.SS.OLM)[0].
 
 
 ON AG1 {
