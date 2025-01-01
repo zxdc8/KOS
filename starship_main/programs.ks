@@ -40,7 +40,7 @@ function primaryAscent{
 
 function shRecover{
     set programTgt to latlng(28.5490773930942,-80.6559373483508). //ship:geoposition.
-    //shBoostback(programTgt).
+    shBoostback(programTgt).
     shGlide(programTgt).
     shTargetLanding(programTgt).
 }

@@ -614,15 +614,16 @@ function primaryBoosterAscent{
 
 function shBoostBack{
 
+    wait 2.
+
+  
     wait 5.
     local parameter landingTgt.
     set hdg to compass_for().
 
     stage.
     wait 1.
-    
     stage.
-    wait 1.
 
     rcs on.
 
@@ -630,15 +631,9 @@ function shBoostBack{
     SET now to time:seconds.
     WAIT until time:seconds > now + 3.
     SET SHIP:CONTROL:FORE to 0.0.
-
-    set thrott to 0.5.
+    set thrott to 0.9.
     lock throttle to thrott.
-    //clusterOff.
-    wait 2.
-    //clusterOn.
-    //clusterDown.
-    //turnover.
-    
+
 
 
 
@@ -650,12 +645,12 @@ function shBoostBack{
     lock tgtError to v(latError, lngError, 0):mag.
 
     set pidAlong to pidLoop(10,0,0).
-    set pidAcross to pidloop(200,0,5).
+    set pidAcross to pidloop(500,10,5).
 
-    set pidAlong:minoutput to 0.1. 
+    set pidAlong:minoutput to 0.8. 
     set pidAlong:maxoutput to 1.
-    //set pidAcross:minoutput to -10. 
-    //set pidAcross:maxoutput to 10.
+    set pidAcross:minoutput to -10. 
+    set pidAcross:maxoutput to 10.
     set pidAlong:setpoint to 1/180.
 
     set STEERINGMANAGER:yawts to 0.3.
@@ -664,7 +659,7 @@ function shBoostBack{
 
     lock steerCorrection to pidAcross:update(time:seconds, bodyError[1]).
 
-    lock steer to heading(addons:tr:getTarget:heading + steerCorrection ,10, 0).
+    lock steer to heading(addons:tr:getTarget:heading + steerCorrection ,0, 0).
     lock steering to steer.
 
     wait 10.    
@@ -676,7 +671,7 @@ function shBoostBack{
     print addons:tr:impactPos:heading + steerCorrection.
 
     //clusterUp().
-    wait until abs(bodyError[0]) < 1/30.
+    wait until abs(bodyError[0]) < 1/60.
         clusterDown().
 
     until bodyError[0] > 1/360{
@@ -684,9 +679,9 @@ function shBoostBack{
         print landingTgt:heading - steerCorrection.
     }
 
-    wait until bodyError[0] > 1/360.
+    wait until bodyError[0] > 3/360.
         set thrott to 0.
-        cluster:shutdown.
+        clusterUp.
         
         lock steer to srfRetrograde.
 
@@ -703,8 +698,7 @@ function shGlide{
     unlock thrott.
     set throttLdg to 0.
     lock throttle to throttLdg.
-    cluster:activate.
-    //clusterDown().
+    
     wait 1.
 
     //wait 20.
@@ -750,7 +744,7 @@ function shGlide{
         ).
     
     
-    lock accel to ship:availableThrust/ship:mass - 9.81 + 10.
+    lock accel to ship:availableThrust/ship:mass - 9.81.
     print accel.
 
     print ship:availableThrust.
@@ -762,9 +756,9 @@ function shGlide{
     set pidThrott to pidLoop(0.4,0,0.05).
     set pidThrott:minoutput to 0.1.
     lock steering to srfRetrograde:vector.
-    until altitude < 500{
+    until altitude < 2000{
         
-        set pidThrott:setpoint to -(2*accel*(altitude-500)) ^ 0.5.
+        set pidThrott:setpoint to -0.75*(2*accel*(altitude-1000)) ^ 0.5.
         print pidThrott:setpoint.
         print verticalSpeed.
         set throttLdg to pidThrott:update(time:seconds, verticalSpeed).
@@ -790,6 +784,7 @@ function shtargetLanding{
 
     // //Define PID and Targets
 
+    //clusterDown.
 
     SET pidThrott TO PIDLOOP(0.3, 0.01, 0.01).
 
@@ -877,7 +872,7 @@ function shtargetLanding{
         set dNorth to landingTgt:position * ship:north:forevector.
         set dEast to landingTgt:position * ship:north:starvector.
 
-        SET TGTVS TO -(0.01 + 0.2*bounds_box:BOTTOMALTRADAR).
+        SET TGTVS TO -(0.02 + 0.1*bounds_box:BOTTOMALTRADAR).
         //set tgtvs to 0.
         SET pidThrott:SETPOINT TO TGTVS.
         SET thrott to pidThrott:UPDATE(TIME:SECONDS, VERTICALSPEED).
