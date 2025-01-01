@@ -1,10 +1,10 @@
-run "./lib/lib_control.ks".
-run "./lib/lib_navutils.ks".
-run "./lib/lib_sysutils.ks".
-run "./lib/lib_navball.ks".
-run "./starship/mnvr.ks".
-run "./starship/programs.ks".
-run "./lib/lib_geodec.ks".
+run "../starship_lib/lib_control.ks".
+run "../starship_lib/lib_navutils.ks".
+run "../starship_lib/lib_sysutils.ks".
+run "../starship_lib/lib_navball.ks".
+run "../starship_main/mnvr.ks".
+run "../starship_main/programs.ks".
+run "../starship_lib/lib_geodec.ks".
 
 set RAP1 to SHIP:PARTSDUBBED("RAP1")[0].
 set RAP2 to SHIP:PARTSDUBBED("RAP2")[0].
