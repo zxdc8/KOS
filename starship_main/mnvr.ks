@@ -756,7 +756,7 @@ function shGlide{
     set pidThrott to pidLoop(0.4,0,0.05).
     set pidThrott:minoutput to 0.1.
     lock steering to srfRetrograde:vector.
-    until altitude < 2000{
+    until velocity:surface < 600{
         
         set pidThrott:setpoint to -0.75*(2*accel*(altitude-1000)) ^ 0.5.
         print pidThrott:setpoint.
@@ -769,184 +769,37 @@ function shGlide{
 }
 
 function shtargetLanding{
-    parameter landingTgt.
+    local parameter landingTgt.
+    local guidanceCommand is lexicon().
+
+    local complete is 0.
+
+    local steer to up.
+    lock steering to steer.
     
-    // set steeringManager:rollcontrolanglerange to backuprollcontrolanglerange.
-    // set steeringManager:maxstoppingtime to backupmaxstoppingtime.
+    local thrott to 0.5.
+    lock throttle to thrott.
+    local params is 0.
+    getShParams().
 
-    // set steeringManager:maxstoppingtime to 0.5.
-    
-    //FLIP TIME
-    // PRINT "FLIP...".
-    // headerOn().
-    // activateSLRaptor().
-    // set raptorsLit to false.
+    landingPIDInit(guidanceParams[0]).
 
-    // //Define PID and Targets
+    until complete{
 
-    //clusterDown.
 
-    SET pidThrott TO PIDLOOP(0.3, 0.01, 0.01).
-
-    SET pidThrott:MINOUTPUT TO 0.001.
-    SET pidThrott:MAXOUTPUT TO 1.
-
-    SET thrott TO 0.65.
-    LOCK THROTTLE TO thrott.
-
-    set desSteer to UP.
-
-    LOCK STEERING TO desSteer.
-
-    SET complete TO 0.
-
-    set pidVNorth to pidLoop(0.15, 0.00, 0.005).
-    set pidVNorth:minoutput to -40.
-    set pidVNorth:maxoutput to 40. 
-    
-    set pidVEast to pidloop(0.15, 0.00, 0.005).
-    set pidVEast:minoutput to -40.
-    set pidVEast:maxoutput to 40.   
-
-    set pidSteerNorth to pidLoop(0.4, 0.05, 0.05).
-    set pidSteerNorth:minoutput to -5.
-    set pidSteerNorth:maxoutput to 5. 
-
-    set pidSteerEast to pidloop(0.4, 0.05, 0.05).
-
-    set pidSteerEast:minoutput to -5.
-    set pidSteerEast:maxoutput to 5.   
-
-    //SET PIDHS to PIDLOOP(0.015, 0.000, 0.000).
-    //SET PIDHS:MINOUTPUT TO 0.0.
-    //SET PIDHS:MAXOUTPUT TO 0.3.
-    //SET PIDHS:SETPOINT TO 0.
-
-    local gravity is (constant():g*body:mass)/(body:radius^2).
-    local bounds_box is ship:bounds.
-
-    set mixFactor to 0.3.
-
-    wait 2.
-
-    UNTIL complete  {
-
-        // if ship:velocity:surface:mag < 50 and RAP1:ignition{
-        //     clusterDown().
-        // }
-//         if ship:velocity:surface:mag < 20 and RAP2:ignition{
-//             RAP2:shutdown.
-//             act2:setfield("actuate out",1).
-//             set steeringManager:maxstoppingtime to 1.
-//             set mixFactor to 0.3.
-//             //SET PIDHS:Kp to 0.2.
-//             //SET PIDHS:Kd to 0.1.
-//         }
-//         //if ship:velocity:surface:mag <5 {
-//         //    SET PIDHS:Kp to 0.4.
-//         //    return false.
-//         //}
+        set guidanceCommand to landingPIDUpdate(landingTgt).
         
-
-//         if bounds_box:BOTTOMALTRADAR < 0.1 {
-//             SET complete TO 1.
-//             SET thrott to 0.
-//             UNLOCK steering.
-//             return false.
-//             }
-// //
-//         if RAP3:thrust >5 and not raptorsLit.{
-//             checkSLRaptorLit.
-//             set raptorsLit to true.
-//             RAP1:shutdown.
-//             act1:setfield("actuate out",1).
-//         }
-
-        set northVel to vDot(ship:velocity:surface, ship:north:forevector).
-        set eastVel to vDot(ship:velocity:surface, ship:north:starvector).
-
-        //set northSteer to vDot(ship:facing:forevector, ship:north:forevector).
-        //set eastSteer to vDot(ship:facing:forevector, ship:north:starvector).
-
-        //set relPos to ship:north:inverse * landingTgt:position.
-        set dNorth to landingTgt:position * ship:north:forevector.
-        set dEast to landingTgt:position * ship:north:starvector.
-
-        SET TGTVS TO -(0.02 + 0.1*bounds_box:BOTTOMALTRADAR).
-        //set tgtvs to 0.
-        SET pidThrott:SETPOINT TO TGTVS.
-        SET thrott to pidThrott:UPDATE(TIME:SECONDS, VERTICALSPEED).
-        
-        set northVelTgt to pidVNorth:update(time:seconds, dNorth).
-        set eastVelTgt to pidVEast:update(time:seconds, dEast).
-
-        if bounds_box:BOTTOMALTRADAR < 20 {
-            set northVelTgt to 0.
-            set eastVelTgt to 0.
-        }
-
-        set pidSteerNorth:setpoint to -northVelTgt.
-        set pidSteerEast:setpoint to -eastVelTgt.
-
-        set northSteer to pidSteerNorth:update(time:seconds, northVel).
-        set eastSteer to pidSteerEast:update(time:seconds, eastVel).
-
-        
-        //ship:north:forevector * northSteer
-
-        set steeringVector to northSteer * ship:north:forevector + eastSteer * ship:north:starvector.
-        //set steeringVector to v(0, 0, 0).
-        
-        SET iArrow TO VECDRAW(
-            V(0,0,0),
-            10*steeringVector,
-            RGB(1,0,0),
-            "steeringvector?",
-            1.0,
-            TRUE,
-            0.2,
-            TRUE,
-            TRUE
-            ).
-
-        SET iiArrow TO VECDRAW(
-            V(0,0,0),
-            100*ship:north:forevector,
-            RGB(0,1,0),
-            "forevector?",
-            1.0,
-            TRUE,
-            0.2,
-            TRUE,
-            TRUE
-            ).
-        SET iiiArrow TO VECDRAW(
-            V(0,0,0),
-            100*ship:north:starvector,
-            RGB(0,0,1),
-            "starvector?",
-            1.0,
-            TRUE,
-            0.2,
-            TRUE,
-            TRUE
-            ).
-
-        //SET hComp to -vectorExclude(up:vector, ship:velocity:surface).
-        //SET hSteer to PIDHS:UPDATE(TIME:SECONDS, hComp:mag).
-        //PRINT hSteer.	
-        //PRINT hComp:mag.
-
-        print dNorth.
-        print dEast.
-        print northVelTgt.
-        print eastVelTgt.
-        print northVel.
-        print eastVel.
-        print northSteer.
-        print eastSteer.
-        
-        set desSteer to lookdirup(up:vector * gravity + mixFactor*steeringVector ,ship:facing:topvector).
+        set steer to guidanceCommand:steering.
+        set thrott to guidanceCommand:throttle.
+       
+        // print dNorth.
+        // print dEast.
+        // print northVelTgt.
+        // print eastVelTgt.
+        // print northVel.
+        // print eastVel.
+        // print northSteer.
+        // print eastSteer.
         
 
 
